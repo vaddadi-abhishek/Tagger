@@ -1,50 +1,33 @@
-# Welcome to your Expo app 👋
+# Tagger
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A brief one-sentence description of what the Tagger application does.
 
-## Get started
+## About The Project
 
-1. Install dependencies
+Here you can provide a more detailed description of your project. Talk about your motivation for building it, the problem it solves, and any technologies you used.
 
-   ```bash
-   npm install
-   ```
+## Getting Started
 
-2. Start the app
+This section should guide a user or developer on how to get a local copy of the project up and running.
 
-   ```bash
-   npx expo start
-   ```
+### Prerequisites
 
-In the output, you'll find options to open the app in a
+List any software or tools that need to be installed before someone can use your project.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+*   Node.js
+*   Expo Go app (on your mobile device)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Installation
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1.  Clone the repo
+    ```sh
+    git clone https://github.com/your_username/Tagger.git
+    ```
+2.  Install NPM packages
+    ```sh
+    npm install
+    ```
+3.  Run the development server
+    ```sh
+    npx expo start
+    ```
