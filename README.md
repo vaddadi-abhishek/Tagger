@@ -4,18 +4,17 @@ A brief one-sentence description of what the Tagger application does.
 
 ## About The Project
 
-Here you can provide a more detailed description of your project. Talk about your motivation for building it, the problem it solves, and any technologies you used.
+The project is a mobile first React Native app for Social media bookmarks organizing and manager app with AI fetaures and Shared spaces.
 
 ## Getting Started
-
-This section should guide a user or developer on how to get a local copy of the project up and running.
 
 ### Prerequisites
 
 List any software or tools that need to be installed before someone can use your project.
 
+*   VS Code
 *   Node.js
-*   Expo Go app (on your mobile device)
+*   Expo Go app (on your mobile device) / Android Studio
 
 ### Installation
 
