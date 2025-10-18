@@ -45,10 +45,11 @@ export default function AddScreen() {
     }
   };
 
+  const isLinkEmpty = link.trim() === '';
+  const isTagsDisabled = link.trim().length < 10;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create</Text>
-
       {/* Add Link Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Add Link</Text>
@@ -61,15 +62,12 @@ export default function AddScreen() {
           keyboardType="url"
           placeholderTextColor="#999"
         />
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Add Tags Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Add Tags</Text>
-        <View style={styles.tagsContainer}>
+        <View style={[styles.tagsContainer, isTagsDisabled && styles.disabledInput]}>
           {tags.map((tag, index) => (
             <View key={index} style={styles.tag}>
               <Text style={styles.tagText}>{tag}</Text>
@@ -88,6 +86,7 @@ export default function AddScreen() {
             autoCapitalize="none"
             placeholderTextColor="#999"
             returnKeyType="done"
+            editable={!isTagsDisabled}
           />
         </View>
       </View>
@@ -104,6 +103,13 @@ export default function AddScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Save Button */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={[styles.saveButton, isLinkEmpty && styles.disabledButton]} disabled={isLinkEmpty}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -112,14 +118,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f2f5', // Lighter, modern background
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
-    fontFamily: 'System', // Explicitly using system font for clean look
+    paddingHorizontal: 20,
+    paddingTop: 40,
   },
   section: {
     marginBottom: 25,
@@ -141,11 +141,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   saveButton: {
+    width: '100%',
     backgroundColor: '#487eb0',
-    height: 35,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 18,
+    borderRadius: 12,
   },
   saveButtonText: {
     color: '#fff',
@@ -213,5 +214,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+  },
+  footer: {
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#dcdfe6',
+    backgroundColor: '#f0f2f5',
+  },
+  disabledButton: {
+    backgroundColor: '#a0b9d1',
+  },
+  disabledInput: {
+    backgroundColor: '#e9ecef', // A darker grey to show it's disabled
+    borderColor: '#ced4da',
   },
 });
