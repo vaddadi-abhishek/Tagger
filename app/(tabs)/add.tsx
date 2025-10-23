@@ -1,12 +1,18 @@
 import { FontAwesome } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
+import LinkPreview from 'react-native-link-preview';
 
 const options = [
   {
@@ -25,6 +31,9 @@ export default function AddScreen() {
   const [link, setLink] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState('');
 
   const handleAddTag = () => {
     if (tagInput.trim() !== '' && !tags.includes(tagInput.trim())) {
@@ -48,78 +57,168 @@ export default function AddScreen() {
   const isLinkEmpty = link.trim() === '';
   const isTagsDisabled = link.trim().length < 10;
 
+  // 🧩 Auto-fetch link preview
+  useEffect(() => {
+    const fetchPreview = async () => {
+      if (!link.trim() || !link.startsWith('http')) {
+        setPreviewData(null);
+        setPreviewError('');
+        return;
+      }
+
+      setLoadingPreview(true);
+      setPreviewError('');
+
+      try {
+        const data = await LinkPreview.getPreview(link.trim(), {
+          imagesPropertyType: 'og',
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+        });
+
+        setPreviewData(data);
+      } catch (error) {
+        setPreviewError('Could not fetch preview.');
+        setPreviewData(null);
+      } finally {
+        setLoadingPreview(false);
+      }
+    };
+
+    const delay = setTimeout(fetchPreview, 1000); // wait 1s after typing stops
+    return () => clearTimeout(delay);
+  }, [link]);
+
   return (
-    <View style={styles.container}>
-      {/* Add Link Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Add Link</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://example.com"
-          value={link}
-          onChangeText={setLink}
-          autoCapitalize="none"
-          keyboardType="url"
-          placeholderTextColor="#999"
-        />
-      </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          {/* Add Link Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Add Link</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://example.com"
+              value={link}
+              onChangeText={setLink}
+              autoCapitalize="none"
+              keyboardType="url"
+              placeholderTextColor="#999"
+            />
 
-      {/* Add Tags Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Add Tags</Text>
-        <View style={[styles.tagsContainer, isTagsDisabled && styles.disabledInput]}>
-          {tags.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-              <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
-                <Text style={styles.removeTagText}>×</Text>
+            {/* Link Preview */}
+            {loadingPreview && (
+              <View style={styles.previewContainer}>
+                <ActivityIndicator size="small" color="#487eb0" />
+                <Text style={styles.loadingText}>Fetching preview...</Text>
+              </View>
+            )}
+
+            {previewError ? (
+              <Text style={styles.errorText}>{previewError}</Text>
+            ) : (
+              previewData && (
+                <View style={styles.previewCard}>
+                  {previewData.images?.length > 0 && (
+                    <Image
+                      source={{ uri: previewData.images[0] }}
+                      style={styles.previewImage}
+                      resizeMode="contain"
+                    />
+                  )}
+                  <View style={styles.previewContent}>
+                    <Text style={styles.previewTitle}>
+                      {previewData.title || 'No title available'}
+                    </Text>
+                    <Text style={styles.previewUrl}>
+                      {previewData.url || link.trim()}
+                    </Text>
+                  </View>
+                </View>
+              )
+            )}
+          </View>
+
+          {/* Add Tags Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Add Tags</Text>
+            <View
+              style={[
+                styles.tagsContainer,
+                isTagsDisabled && styles.disabledInput,
+              ]}
+            >
+              {tags.map((tag, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                  <TouchableOpacity onPress={() => handleRemoveTag(tag)}>
+                    <Text style={styles.removeTagText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              <TextInput
+                style={styles.tagInput}
+                placeholder={tags.length === 0 ? 'Add tags...' : ''}
+                value={tagInput}
+                onChangeText={setTagInput}
+                onSubmitEditing={handleAddTag}
+                onKeyPress={handleKeyPress}
+                autoCapitalize="none"
+                placeholderTextColor="#999"
+                returnKeyType="done"
+                editable={!isTagsDisabled}
+              />
+            </View>
+          </View>
+
+          {/* Options Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Options</Text>
+            {options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.optionButton}
+                onPress={option.onPress}
+              >
+                <View style={styles.optionIconContainer}>
+                  <FontAwesome name={option.icon} size={20} color="#487eb0" />
+                </View>
+                <Text style={styles.optionText}>{option.text}</Text>
               </TouchableOpacity>
-            </View>
-          ))}
-          <TextInput
-            style={styles.tagInput}
-            placeholder={tags.length === 0 ? 'Add tags...' : ''}
-            value={tagInput}
-            onChangeText={setTagInput}
-            onSubmitEditing={handleAddTag}
-            onKeyPress={handleKeyPress}
-            autoCapitalize="none"
-            placeholderTextColor="#999"
-            returnKeyType="done"
-            editable={!isTagsDisabled}
-          />
+            ))}
+          </View>
+
+          {/* Save Button */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.saveButton, isLinkEmpty && styles.disabledButton]}
+              disabled={isLinkEmpty}
+            >
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-
-      {/* Options Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Options</Text>
-        {options.map((option, index) => (
-          <TouchableOpacity key={index} style={styles.optionButton} onPress={option.onPress}>
-            <View style={styles.optionIconContainer}>
-              <FontAwesome name={option.icon} size={20} color="#487eb0" />
-            </View>
-            <Text style={styles.optionText}>{option.text}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Save Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={[styles.saveButton, isLinkEmpty && styles.disabledButton]} disabled={isLinkEmpty}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 60, // ✅ ensures scroll space after last element
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5', // Lighter, modern background
+    backgroundColor: '#f0f2f5',
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 25,
   },
   section: {
     marginBottom: 25,
@@ -140,18 +239,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 15,
   },
-  saveButton: {
-    width: '100%',
-    backgroundColor: '#487eb0',
-    height: 50,
-    justifyContent: 'center',
+  previewContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
+    gap: 8,
   },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  loadingText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  errorText: {
+    color: '#e74c3c',
+    fontSize: 14,
+  },
+  previewCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderColor: '#dcdfe6',
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginTop: 10,
+  },
+  previewImage: {
+    width: '100%',
+    height: 180,
+  },
+  previewContent: {
+    padding: 10,
+  },
+  previewTitle: {
     fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+  previewDescription: {
+    fontSize: 14,
+    color: '#555',
+    marginVertical: 4,
+  },
+  previewUrl: {
+    fontSize: 12,
+    color: '#487eb0',
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -168,14 +296,14 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0eaf3', // Light blue, complements the save button
+    backgroundColor: '#e0eaf3',
     borderRadius: 16,
     paddingVertical: 6,
     paddingHorizontal: 12,
     margin: 4,
   },
   tagText: {
-    color: '#487eb0', // Darker blue for contrast
+    color: '#487eb0',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -221,11 +349,24 @@ const styles = StyleSheet.create({
     borderTopColor: '#dcdfe6',
     backgroundColor: '#f0f2f5',
   },
+  saveButton: {
+    width: '100%',
+    backgroundColor: '#487eb0',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   disabledButton: {
     backgroundColor: '#a0b9d1',
   },
   disabledInput: {
-    backgroundColor: '#e9ecef', // A darker grey to show it's disabled
+    backgroundColor: '#e9ecef',
     borderColor: '#ced4da',
   },
 });
