@@ -1,4 +1,4 @@
-package com.abhishekvaddadi.Tagger
+package com.app.tagger
 
 import android.app.Application
 import android.content.res.Configuration

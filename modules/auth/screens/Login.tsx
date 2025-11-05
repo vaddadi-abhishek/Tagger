@@ -1,3 +1,4 @@
+import { signInWithGoogle } from "@/modules/auth/api/auth.api";
 import { FontAwesome } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -54,6 +55,20 @@ export default function LoginScreen() {
       outputRange: [0, -10], // moves up and down slightly
     });
 
+
+  const handleGoogleLogin = async () => {
+    try {
+      const session = await signInWithGoogle();
+      if (session) {
+        Alert.alert("Success", "You are signed in!");
+        // TODO: navigate to main app screen (Home)
+      }
+    } catch (error) {
+      Alert.alert("Error", "Login failed. Please try again.");
+      console.error(error);
+    }
+  };
+
   return (
     <LinearGradient
       colors={["#d9ddff", "#ebe6ff", "#b2daffff"]}
@@ -72,11 +87,12 @@ export default function LoginScreen() {
 
       {/* Center Section */}
       <View style={styles.centerContent}>
-        <Text style={styles.headline}>Organize your bookmarks.</Text>
+        <Text style={styles.headline}>Save your bookmarks.</Text>
         <Text style={styles.subheadline}>
           Collect, categorize, and rediscover your saved links effortlessly.
         </Text>
 
+        {/* 3d character */}
         <View style={styles.dollContainer}>
           <Image
             source={require("@/assets/images/3d-doll.png")}
@@ -132,7 +148,7 @@ export default function LoginScreen() {
         <Text style={styles.subtext}>Sign in to continue your journey</Text>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.authButton}>
+          <TouchableOpacity style={styles.authButton} onPress={handleGoogleLogin} >
             <FontAwesome name="google" size={18} color="#fff" />
             <Text style={styles.authButtonText}>Continue with Google</Text>
           </TouchableOpacity>

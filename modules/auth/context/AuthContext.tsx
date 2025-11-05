@@ -1,6 +1,7 @@
-import { clearToken, getToken, storeToken } from "@/utils/storage";
+// modules/auth/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { loginAPI } from "../api/auth.api";
+import { signInWithGoogle, signOut } from "../api/auth.api";
+import { supabase } from "../utils/supabaseClient";
 
 const AuthContext = createContext(null);
 
@@ -8,28 +9,38 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Listen for session changes
   useEffect(() => {
-    const bootstrap = async () => {
-      const token = await getToken();
-      if (token) setUser({}); // Fetch profile later
+    const initAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
       setLoading(false);
     };
-    bootstrap();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    initAuth();
+    return () => subscription?.subscription.unsubscribe();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async () => {
     setLoading(true);
     try {
-      const res = await loginAPI(email, password);
-      await storeToken(res.token);
-      setUser(res.user);
+      const session = await signInWithGoogle();
+      setUser(session?.user ?? null);
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
-    await clearToken();
+    await signOut();
     setUser(null);
   };
 
