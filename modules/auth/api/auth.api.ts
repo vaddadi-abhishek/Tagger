@@ -1,4 +1,3 @@
-// modules/auth/api/auth.api.ts
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { supabase } from "../utils/supabaseClient";
@@ -7,33 +6,27 @@ WebBrowser.maybeCompleteAuthSession();
 
 export async function signInWithGoogle() {
   try {
-    const redirectUrl = AuthSession.makeRedirectUri({ useProxy: false });
-    console.log(redirectUrl)
+    const redirectUrl = AuthSession.makeRedirectUri({ useProxy: true });
+    console.log("Redirect URL:", redirectUrl);
 
+    // Get Supabase OAuth URL
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: redirectUrl,
-        skipBrowserRedirect: true,
-      },
+      options: { redirectTo: redirectUrl },
     });
 
     if (error) throw error;
-    const authUrl = data?.url;
-    if (!authUrl) throw new Error("No auth URL returned from Supabase");
 
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+    // Open in browser / proxy
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
-    if (result.type === "success" && result.url) {
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSessionFromUrl({
-          url: result.url,
-          storeSession: true, // Supabase stores session internally
-        });
+    if (result.type !== "success") throw new Error("Login cancelled or failed");
 
-      if (sessionError) throw sessionError;
-      return sessionData.session;
-    }
+    // Supabase auto-detects session via URL
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    return sessionData.session;
   } catch (err) {
     console.error("Google Sign-in Error:", err);
     throw err;

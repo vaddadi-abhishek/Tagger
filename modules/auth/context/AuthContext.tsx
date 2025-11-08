@@ -1,4 +1,3 @@
-// modules/auth/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { signInWithGoogle, signOut } from "../api/auth.api";
 import { supabase } from "../utils/supabaseClient";
@@ -9,39 +8,52 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Listen for session changes
   useEffect(() => {
+    let mounted = true;
+
     const initAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) setUser(data?.session?.user ?? null);
+      } catch (err) {
+        console.error("Error fetching session:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
     };
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
     initAuth();
-    return () => subscription?.subscription.unsubscribe();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setUser(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      subscription?.subscription?.unsubscribe();
+    };
   }, []);
 
   const login = async () => {
     setLoading(true);
     try {
-      const session = await signInWithGoogle();
-      setUser(session?.user ?? null);
+      await signInWithGoogle();
+      // session auto-detected, user state updated via onAuthStateChange
+    } catch (err) {
+      console.error("Login error:", err);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
-    await signOut();
-    setUser(null);
+    try {
+      await signOut();
+      setUser(null);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   return (
